@@ -181,26 +181,6 @@ depends(_Host, _Opts) ->
          auth         :: #aws_auth{},
          access       :: atom()}).
 
--spec build_service_params(
-        binary(),
-        gen_mod:opts()
-       ) ->
-          #params{}.
-% create a service params record from module config
-build_service_params(ServerHost, Opts) ->
-    Auth = #aws_auth{access_key_id = get_opt(access_key_id, Opts),
-                     access_key    = get_opt(access_key_secret, Opts),
-                     region        = get_opt(region, Opts)},
-    #params{service_name = get_opt(service_name, Opts),
-            service_jids = get_opt(hosts, Opts),
-            max_size     = get_opt(max_size, Opts),
-            bucket_url   = get_opt(bucket_url, Opts),
-            set_public   = get_opt(set_public, Opts),
-            ttl          = get_opt(put_ttl, Opts),
-            server_host  = ServerHost,
-            auth         = Auth,
-            access       = get_opt(access, Opts)}.
-
 -spec init(
         list()
        ) ->
@@ -363,6 +343,37 @@ handle_iq(IQ, _Params) ->
 %%------------------------------------------------------------------------
 %% Internal Helpers
 %%------------------------------------------------------------------------
+
+-spec expanded_jids(
+        ServiceHost :: binary(),
+        JIDs :: [binary()]
+       ) ->
+          [binary()].
+% expand @HOST@ in JIDs
+expanded_jids(ServerHost, JIDs) ->
+    lists:map(fun (JID) ->
+                      misc:expand_keyword(<<"@HOST@">>, JID, ServerHost)
+              end, JIDs).
+
+-spec build_service_params(
+        binary(),
+        gen_mod:opts()
+       ) ->
+          #params{}.
+% create a service params record from module config
+build_service_params(ServerHost, Opts) ->
+    Auth = #aws_auth{access_key_id = get_opt(access_key_id, Opts),
+                     access_key    = get_opt(access_key_secret, Opts),
+                     region        = get_opt(region, Opts)},
+    #params{service_name = get_opt(service_name, Opts),
+            service_jids = expanded_jids(ServerHost, get_opt(hosts, Opts)),
+            max_size     = get_opt(max_size, Opts),
+            bucket_url   = get_opt(bucket_url, Opts),
+            set_public   = get_opt(set_public, Opts),
+            ttl          = get_opt(put_ttl, Opts),
+            server_host  = ServerHost,
+            auth         = Auth,
+            access       = get_opt(access, Opts)}.
 
 -spec url_service_parameters(
         #params{}
