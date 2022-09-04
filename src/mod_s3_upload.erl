@@ -245,7 +245,8 @@ handle_cast(Request, Opts) ->
 -spec update_routes(
         binary(),
         [binary()],
-        [binary()]) ->
+        [binary()]
+       ) ->
           _.
 % maintain routing rules for JIDs owned by this service.
 update_routes(ServerHost, OldDomains, NewDomains) ->
@@ -309,9 +310,8 @@ handle_iq(#iq{type = get,
 handle_iq(#iq{type    = get,
               from    = Requester,
               lang    = Lang,
-              sub_els = [#upload_request_0{
-                            filename = FileName,
-                            size     = FileSize} = UploadRequest]} = IQ,
+              sub_els = [#upload_request_0{filename = FileName,
+                                           size     = FileSize} = UploadRequest]} = IQ,
           #params{server_host = ServerHost,
                   access      = Access,
                   bucket_url  = BucketURL,
@@ -416,7 +416,6 @@ put_url(UploadRequest, ServiceParams, URL) ->
     Params = upload_parameters(UploadRequest, ServiceParams),
     WithOpts = uri_string:compose_query(Params ++ QueryList),
     uri_string:recompose(UriMap#{query => WithOpts}).
-
 
 -spec object_url(
         binary(),
