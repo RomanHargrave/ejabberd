@@ -61,7 +61,7 @@ jobs:
             VERSION=${{ steps.gitdescribe.outputs.ver }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          context: .github/container
+          context: .
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           push: true

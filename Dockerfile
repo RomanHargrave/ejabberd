@@ -28,24 +28,23 @@ RUN apk upgrade --update musl \
 RUN mix local.hex --force \
     && mix local.rebar --force
 
+COPY . ./ejabberd
+
 WORKDIR ejabberd
 
-RUN git clone https://github.com/processone/ejabberd.git . \
-    && git checkout $VERSION \
-    && mv .github/container/ejabberdctl.template . \
+RUN mv docker/ejabberdctl.template . \
     && ./autogen.sh \
     && ./configure --with-rebar=mix --enable-all \
-    && mix deps.get \
+    && make deps \
     && make rel
 
 RUN cp -r _build/prod/rel/ejabberd/ /opt/ejabberd-$VERSION \
     && mkdir -p /opt/ejabberd \
     && mv /opt/ejabberd-$VERSION/conf /opt/ejabberd/conf
 
-RUN DESCRIBE=$(git describe --tags) \
-    && MIXVER=$(echo $DESCRIBE.0 | sed -e 's/-g.*//' -e 's/-/./' | tr -d '[:space:]') \
-    && mkdir /opt/ejabberd-$VERSION/lib/ejabberd-$MIXVER/priv/bin \
-    && cp tools/captcha*.sh /opt/ejabberd-$VERSION/lib/ejabberd-$MIXVER/priv/bin/
+RUN BINPATH=$(dirname $(find /opt -name msgs))/bin/ \
+    && mkdir $BINPATH \
+    && cp tools/captcha*.sh $BINPATH
 
 RUN export PEM=/opt/ejabberd/conf/server.pem \
     && curl -o "/opt/ejabberd/conf/cacert.pem" 'https://curl.se/ca/cacert.pem' \
@@ -102,10 +101,10 @@ RUN addgroup ejabberd -g 9000 \
     && chown -R ejabberd:ejabberd $HOME
 
 HEALTHCHECK \
-    --interval=5s \
+    --interval=1m \
     --timeout=5s \
     --start-period=5s \
-    --retries=120 \
+    --retries=10 \
     CMD /usr/local/bin/ejabberdctl status
 
 WORKDIR $HOME
